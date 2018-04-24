@@ -72,29 +72,8 @@ def load_file(filepath):
 data = list(map(load_file, files))
 #######################################################################
 
-
-def analyse_missed_beats(data):
-    first_beat = data[0          ][COL_BEAT]
-    last_beat  = data[len(data)-1][COL_BEAT]
-
-    print("First beat: {:d}, last: {:d}".format(first_beat, last_beat))
-
-    cur_run        = 0
-    last_on_beat   = 1
-    max_missed_run = 0
-    min_missed_run = 0
-    max_hit_run    = 0
-    min_hit_run    = 0
-    num_hit        = 0
-    num_missed     = 0
-    last_beat_seen = first_beat-1
-
-
-    for row in data:
-        print(row)
-
-def analyse_beat_delta(name, data):
-    print("Analysing beat delta for file: {:s}".format(name))
+def analyse_beat_delta_hist(name, data):
+    print("Analysing beat delta hist for: {:s}".format(name))
 
     deltas = np.zeros(len(data))
 
@@ -116,7 +95,49 @@ def analyse_beat_delta(name, data):
         else:
             plt.setp(p, 'facecolor', 'green')
 
-    plt.savefig(OUT_DIR + "beat_delta_" + name + ".png")
+    plt.savefig(OUT_DIR + name + "_beat_delta_hist.png")
+    plt.close()
+
+def analyse_beat_delta(name, data):
+    print("Analysing beat delta for: {:s}".format(name))
+
+    deltas       = [] # The first delta time per beat
+    beats        = [] # x axis values corresponding to deltas array
+
+    extra_deltas = [] # Extra delta times per beat (IE: where user pressed key more than once)
+    extra_beats  = [] # x axis values corresponding to the extra_deltas array
+
+    last_beat = -1
+
+    for i in range(0, len(data)):
+        new_beat  = data[i][COL_BEAT]
+        new_delta = data[i][COL_DELTA]
+
+        if new_beat == last_beat:
+            # Then this is another key on a single beat
+            extra_beats.append(new_beat)
+            extra_deltas.append(new_delta)
+        else:
+            # then we have a new beat
+            beats.append(new_beat  )
+            deltas.append(new_delta)
+
+        last_beat = new_beat
+
+    fig, ax = plt.subplots()
+    plt.title("Beat delta over time for " + name)
+    plt.xlabel("Beat")
+    plt.ylabel("Key Press Beat Delta")
+    plt.grid(True)
+    plt.ylim([-MAX_DELTA, MAX_DELTA])
+    ax.plot(beats,       deltas,       linestyle='none', marker='o', color='green')
+    ax.plot(extra_beats, extra_deltas, linestyle='none', marker='o', color='red')
+    ax.axhspan( 0.100,  0.150,     alpha=0.5, color='yellow')
+    ax.axhspan( 0.150,  MAX_DELTA, alpha=0.5, color='red')
+    ax.axhspan(-0.100, -0.150,     alpha=0.5, color='yellow')
+    ax.axhspan(-0.150, -MAX_DELTA, alpha=0.5, color='red')
+    plt.savefig(OUT_DIR + name + "_beat_delta.png")
+    plt.close()
 
 
 full_data = []
@@ -124,8 +145,8 @@ for i in range(0, len(files)):
     full_data = full_data + data[i]
 
 for i in range(0, len(files)):
+    analyse_beat_delta_hist(file_dates[i], data[i])
+analyse_beat_delta_hist("all", full_data)
+
+for i in range(0, len(files)):
     analyse_beat_delta(file_dates[i], data[i])
-
-analyse_beat_delta("all", full_data)
-
-#map(analyse_missed_beats, data)
