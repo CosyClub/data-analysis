@@ -5,6 +5,7 @@ import os
 import glob
 import csv
 import re
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy             as np
 
@@ -21,6 +22,9 @@ OUT_DIR = os.path.abspath('outputs/') + "/"
 
 if not os.path.exists(OUT_DIR):
     os.makedirs(OUT_DIR)
+
+
+matplotlib.rcParams.update({'font.size': 16})
 
 #######################################################################
 # Generate list of csv files to load from the input arguments
@@ -80,7 +84,7 @@ def analyse_beat_delta_hist(name, data):
     for i in range(0, len(data)):
         deltas[i] = data[i][COL_DELTA]
 
-    plt.figure()
+    plt.figure(tight_layout=True)
     n, bins, patches = plt.hist(x=deltas, bins=31, range=(-MAX_DELTA, MAX_DELTA), normed=True)
     plt.title("Beat Delta for " + name)
     plt.xlabel("Beat Delta (seconds)")
@@ -124,7 +128,7 @@ def analyse_beat_delta(name, data):
 
         last_beat = new_beat
 
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(tight_layout=True)
     plt.title("Beat delta over time for " + name)
     plt.xlabel("Beat")
     plt.ylabel("Key Press Beat Delta")
